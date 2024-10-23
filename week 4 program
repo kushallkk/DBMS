@@ -1,0 +1,145 @@
+create database bank162;
+use bank162;
+CREATE TABLE Branch (
+    branch_name VARCHAR(100),
+    branch_city VARCHAR(100),
+    assets REAL,
+    PRIMARY KEY (branch_name, branch_city)
+);
+
+CREATE TABLE BankAccount (
+    accno INT PRIMARY KEY,
+    branch_name VARCHAR(100),
+    balance REAL,
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE BankCustomer (
+    customer_name VARCHAR(100),
+    customer_street VARCHAR(100),
+    customer_city VARCHAR(100),
+    PRIMARY KEY (customer_name, customer_street)
+);
+
+CREATE TABLE Depositer (
+    customer_name VARCHAR(100),
+    accno INT,
+    PRIMARY KEY (customer_name, accno),
+    FOREIGN KEY (customer_name) REFERENCES BankCustomer(customer_name),
+    FOREIGN KEY (accno) REFERENCES BankAccount(accno)
+);
+
+CREATE TABLE Loan (
+    loan_number INT PRIMARY KEY,
+    branch_name VARCHAR(100),
+    amount REAL,
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Borrower (
+    customer_name VARCHAR(100),
+    loan_number INT,
+    PRIMARY KEY (customer_name, loan_number),
+    FOREIGN KEY (customer_name) REFERENCES BankCustomer(customer_name),
+    FOREIGN KEY (loan_number) REFERENCES Loan(loan_number)
+);
+
+-- Insert Tuples
+INSERT INTO Branch (branch_name, branch_city, assets)
+VALUES
+('Koramangala', 'Bangalore', 50000000),
+('Connaught Place', 'Delhi', 45000000),
+('Colaba', 'Mumbai', 40000000),
+('T. Nagar', 'Chennai', 35000000),
+('Salt Lake', 'Kolkata', 30000000);
+
+INSERT INTO BankAccount (accno, branch_name, balance)
+VALUES
+(1001, 'Koramangala', 25000),  -- Bangalore
+(1002, 'Connaught Place', 35000),  -- Delhi
+(1003, 'Colaba', 40000),  -- Mumbai
+(1004, 'T. Nagar', 15000),  -- Chennai
+(1005, 'Salt Lake', 30000);  -- Kolkata
+
+INSERT INTO BankCustomer (customer_name, customer_street, customer_city)
+VALUES
+('Ravi Kumar', 'MG Road', 'Bangalore'),
+('Ayesha Sheikh', 'Rajiv Chowk', 'Delhi'),
+('Nikhil Mehta', 'Marine Drive', 'Mumbai'),
+('Sneha Rao', 'Adyar', 'Chennai'),
+('Prakash Nair', 'Park Street', 'Kolkata');
+
+INSERT INTO Depositer (customer_name, accno)
+VALUES
+('Ravi Kumar', 1001),  -- Bangalore
+('Ayesha Sheikh', 1002),  -- Delhi
+('Nikhil Mehta', 1003),  -- Mumbai
+('Sneha Rao', 1004),  -- Chennai
+('Prakash Nair', 1005);  -- Kolkata
+
+INSERT INTO Loan (loan_number, branch_name, amount)
+VALUES
+(2001, 'Koramangala', 100000),  -- Bangalore
+(2002, 'Connaught Place', 200000),  -- Delhi
+(2003, 'Colaba', 150000),  -- Mumbai
+(2004, 'T. Nagar', 250000),  -- Chennai
+(2005, 'Salt Lake', 175000);  -- Kolkata
+
+INSERT INTO Borrower (customer_name, loan_number)
+VALUES
+('Ravi Kumar', 2001),  -- Bangalore
+('Ayesha Sheikh', 2002),  -- Delhi
+('Nikhil Mehta', 2003),  -- Mumbai
+('Sneha Rao', 2004),  -- Chennai
+('Prakash Nair', 2005);  -- Kolkata
+
+
+
+SELECT D.customer_name
+FROM Depositer D
+JOIN BankAccount A ON D.accno = A.accno
+JOIN Branch B ON A.branch_name = B.branch_name
+WHERE B.branch_city = 'Delhi'
+GROUP BY D.customer_name
+HAVING COUNT(DISTINCT B.branch_name) =
+    (SELECT COUNT(DISTINCT branch_name)
+     FROM Branch
+     WHERE branch_city = 'Delhi');
+
+
+SELECT DISTINCT B.customer_name
+FROM Borrower B
+WHERE B.customer_name NOT IN
+    (SELECT D.customer_name FROM Depositer D);
+
+
+SELECT DISTINCT D.customer_name
+FROM Depositer D
+JOIN BankAccount A ON D.accno = A.accno
+JOIN Branch B ON A.branch_name = B.branch_name
+JOIN Borrower Bo ON D.customer_name = Bo.customer_name
+JOIN Loan L ON Bo.loan_number = L.loan_number
+WHERE B.branch_city = 'Bangalore' AND L.branch_name = B.branch_name;
+
+
+SELECT B1.branch_name
+FROM Branch B1
+WHERE B1.assets > ALL
+    (SELECT B2.assets
+     FROM Branch B2
+     WHERE B2.branch_city = 'Bangalore');
+
+
+DELETE FROM BankAccount
+WHERE branch_name IN
+    (SELECT branch_name
+     FROM Branch
+     WHERE branch_city = 'Bombay');
+   select *from BankAccount;  
+
+
+UPDATE BankAccount
+SET balance = balance * 1.05;
+select *from BankAccount;
+
+
